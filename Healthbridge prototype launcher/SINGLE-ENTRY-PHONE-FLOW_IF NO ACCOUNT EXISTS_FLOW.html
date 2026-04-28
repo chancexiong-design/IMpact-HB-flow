@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>HealthBridge</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --blue:#2196F3;--blue-light:#E3F2FD;--blue-dark:#1565C0;
+  --green:#34C759;--green-light:#e8f8ec;--green-dark:#2e7d32;
+  --red:#FF3B30;--orange:#FF9500;
+  --text:#1c1c1e;--muted:#6e6e73;--border:#e5e5ea;--bg:#f2f2f7;--card:#fff;
+  --shadow:0 2px 16px rgba(0,0,0,0.10);
+}
+html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;overflow:hidden}
+body{display:flex;justify-content:center;align-items:center}
+
+.phone{
+  width:390px;height:844px;background:#fff;border-radius:44px;
+  box-shadow:0 32px 80px rgba(0,0,0,0.22),0 0 0 1px rgba(0,0,0,0.08);
+  overflow:hidden;display:flex;flex-direction:column;position:relative;
+}
+@media(max-height:900px){
+  .phone{height:100vh;border-radius:0;width:100vw;max-width:430px}
+}
+
+.status-bar{
+  height:50px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;flex-shrink:0;background:inherit;
+}
+.s-time{font-size:15px;font-weight:600;color:var(--text)}
+.s-icons{display:flex;gap:5px;align-items:center}
+.s-icons svg{width:18px;height:18px}
+
+.screen{
+  display:none;flex-direction:column;flex:1;overflow:hidden;
+  animation:fadeIn .22s ease;
+}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scroll-area::-webkit-scrollbar{display:none}
+
+.nav{
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;border-bottom:.5px solid var(--border);flex-shrink:0;background:#fff;
+}
+.nav-title{font-size:17px;font-weight:600;color:var(--text)}
+
+.btn{
+  display:flex;align-items:center;justify-content:center;
+  border-radius:30px;padding:16px;font-size:15px;font-weight:700;
+  font-family:'DM Sans',sans-serif;letter-spacing:.8px;border:none;
+  cursor:pointer;transition:all .18s;width:100%;
+}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:active{transform:scale(.97);opacity:.92}
+.btn-secondary{background:var(--bg);color:var(--text)}
+.btn-secondary:active{transform:scale(.97)}
+.btn-danger{background:#fff;color:var(--red);border:1.5px solid var(--red)}
+
+.link{color:var(--blue);font-size:15px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;text-align:center;padding:4px}
+.link:active{opacity:.7}
+
+.field{
+  background:var(--bg);border:1.5px solid transparent;border-radius:12px;
+  padding:14px 16px;font-size:16px;font-family:'DM Sans',sans-serif;
+  width:100%;color:var(--text);transition:border-color .2s;outline:none;
+}
+.field:focus{border-color:var(--blue);background:#fff}
+label.lbl{font-size:13px;font-weight:500;color:var(--muted);display:block;margin-bottom:6px;letter-spacing:.2px}
+
+.dots{display:flex;gap:8px;justify-content:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .3s}
+.dot.on{background:var(--blue);width:20px}
+
+.kb{flex-shrink:0;background:#d1d5db}
+.kb-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5px}
+.key{
+  height:56px;background:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;
+  user-select:none;transition:background .1s;
+}
+.key:active,.key.flash{background:#c8cdd4}
+.key-num{font-size:22px;font-weight:400;color:var(--text);line-height:1}
+.key-sub{font-size:9px;letter-spacing:1.8px;color:var(--muted);margin-top:2px}
+.key-spec{background:#adb5bd;font-size:14px;color:var(--text)}
+.key-del{background:#adb5bd}
+
+.otp-wrap{display:flex;gap:8px;justify-content:center;padding:0 20px}
+.otp-cell{
+  width:48px;height:56px;border:1.5px solid var(--border);border-radius:12px;
+  font-size:24px;font-weight:600;display:flex;align-items:center;justify-content:center;
+  background:#fafafa;transition:all .2s;color:var(--text);
+}
+.otp-cell.active{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(33,150,243,.15)}
+.otp-cell.filled{border-color:var(--blue);background:#fff}
+
+.check-row{
+  display:flex;align-items:flex-start;gap:12px;padding:14px 16px;
+  border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:border-color .2s;
+}
+.check-row:active{background:var(--bg)}
+.check-box{
+  width:22px;height:22px;border:2px solid var(--border);border-radius:6px;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-top:1px;
+}
+.check-box.on{background:var(--blue);border-color:var(--blue)}
+.check-box.on svg{display:block}
+.check-box svg{display:none;width:13px;height:13px}
+
+.consent-card{border-radius:14px;padding:16px;margin-bottom:12px}
+.c-blue-card{background:#E3F2FD}
+.c-blue-card h4{color:#1565C0;font-size:14px;font-weight:600;margin-bottom:10px}
+.c-blue-card li{color:#1565C0;font-size:13px;margin-left:18px;margin-bottom:4px;line-height:1.5}
+.c-green-card{background:#e8f8ec}
+.c-green-card h4{color:#2e7d32;font-size:14px;font-weight:600;margin-bottom:10px}
+.c-green-card li{color:#2e7d32;font-size:13px;margin-left:18px;margin-bottom:4px;line-height:1.5}
+.info-row{
+  display:flex;gap:10px;align-items:flex-start;background:#E3F2FD;
+  border-radius:12px;padding:12px 14px;margin-bottom:18px;
+}
+.info-row p{font-size:13px;color:#1565C0;font-weight:500;line-height:1.5}
+
+.todo-block{background:#f7f7f7;border-radius:16px;padding:14px;margin-bottom:18px}
+.todo-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.todo-label{font-size:13px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px}
+.connect-cuff{
+  display:flex;align-items:center;gap:10px;background:var(--blue);color:#fff;
+  border-radius:28px;padding:12px 18px;border:none;font-family:'DM Sans',sans-serif;
+  font-size:14px;font-weight:700;letter-spacing:.6px;cursor:pointer;flex:1;
+  transition:all .18s;
+}
+.connect-cuff:active{transform:scale(.97);opacity:.9}
+.x-btn{
+  width:32px;height:32px;background:rgba(0,0,0,.08);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--muted);cursor:pointer;flex-shrink:0;border:none;font-family:inherit;
+  transition:background .15s;
+}
+.x-btn:active{background:rgba(0,0,0,.15)}
+.readings-empty{
+  background:#f7f7f7;border-radius:14px;padding:32px;text-align:center;
+  margin-bottom:20px;
+}
+.readings-empty .re-title{font-size:15px;color:#c7c7cc;font-weight:500;margin-bottom:4px}
+.readings-empty .re-sub{font-size:13px;color:#c7c7cc}
+.section-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:14px}
+.goal-item{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;padding-bottom:14px;border-bottom:.5px solid var(--border)}
+.goal-item:last-child{border-bottom:none;margin-bottom:0}
+.goal-icon-wrap{width:40px;height:40px;flex-shrink:0}
+.goal-text{font-size:14px;color:var(--text);line-height:1.5}
+.goal-text.hi{color:var(--blue);font-weight:600}
+.reading-card{
+  background:#fff;border-radius:14px;border:.5px solid var(--border);
+  padding:14px 16px;margin-bottom:10px;
+}
+.reading-val{font-size:28px;font-weight:700;color:var(--text)}
+.reading-unit{font-size:14px;color:var(--muted);margin-left:4px}
+.reading-time{font-size:12px;color:var(--muted);margin-top:2px}
+.reading-status{font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-block;margin-top:6px}
+.reading-ok{background:var(--green-light);color:var(--green-dark)}
+.reading-warn{background:#fff3e0;color:#e65100}
+
+.device-card{
+  background:#fff;border-radius:16px;border:.5px solid var(--border);
+  padding:16px;display:flex;gap:14px;align-items:center;margin-bottom:12px;
+  cursor:pointer;transition:all .18s;
+}
+.device-card:active{background:var(--bg)}
+.device-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.device-name{font-size:15px;font-weight:600;color:var(--text)}
+.device-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;flex-shrink:0}
+.badge-on{background:var(--green-light);color:var(--green-dark)}
+.badge-off{background:var(--bg);color:var(--muted);border:.5px solid var(--border)}
+
+.avatar{
+  width:80px;height:80px;border-radius:50%;background:var(--blue-light);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:700;color:var(--blue-dark);margin:0 auto 12px;
+}
+.menu-row{
+  display:flex;align-items:center;gap:14px;padding:14px 0;
+  border-bottom:.5px solid var(--border);cursor:pointer;transition:background .15s;
+}
+.menu-row:last-child{border-bottom:none}
+.menu-row:active{opacity:.7}
+.menu-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.menu-label{font-size:15px;color:var(--text);flex:1}
+.menu-arrow{color:var(--muted);font-size:18px}
+
+.tab-bar{
+  height:68px;display:flex;border-top:.5px solid var(--border);
+  background:#fff;flex-shrink:0;padding-bottom:8px;
+}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.3px;transition:color .2s;border:none;background:none;font-family:inherit}
+.tab.on{color:var(--blue)}
+.tab svg{width:24px;height:24px;transition:transform .2s}
+.tab.on svg{transform:scale(1.1)}
+
+.toast{
+  position:absolute;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(0,0,0,.82);color:#fff;padding:10px 20px;border-radius:22px;
+  font-size:13px;font-weight:500;opacity:0;transition:all .3s;pointer-events:none;
+  white-space:nowrap;z-index:100;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.modal-bg{
+  position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:50;
+  display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal-sheet{
+  background:#fff;border-radius:24px 24px 0 0;padding:24px 24px 36px;
+  width:100%;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);
+}
+.modal-bg.open .modal-sheet{transform:none}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px}
+</style>
+</head>
+<body>
+
+<div class="phone" id="app">
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal-bg" id="modal" onclick="closeModal()">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <h3 id="modal-title" style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)"></h3>
+      <p id="modal-body" style="font-size:14px;color:var(--muted);line-height:1.7"></p>
+      <button class="btn btn-primary" style="margin-top:20px" onclick="closeModal()">Got it</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 1: LOGIN -->
+  <div class="screen active" id="s1">
+    <div class="status-bar">
+      <span class="s-time" id="clock1">9:41</span>
+      <div class="s-icons">
+        <svg viewBox="0 0 24 24" fill="var(--text)"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+        <svg viewBox="0 0 24 24" fill="var(--text)"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+      </div>
+    </div>
+    <div class="scroll-area" style="padding:20px 24px 0;display:flex;flex-direction:column;align-items:center">
+      <svg width="72" height="44" viewBox="0 0 72 44" fill="none" style="margin-bottom:10px">
+        <polyline points="2,22 14,22 18,8 25,36 32,10 39,30 44,22 58,22 63,8 68,22" stroke="#2196F3" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1 style="font-family:'DM Serif Display',serif;font-size:30px;color:var(--text);margin-bottom:16px;letter-spacing:-.3px">HealthBridge</h1>
+      <p style="font-size:14px;color:var(--muted);text-align:center;line-height:1.7;max-width:260px;margin-bottom:28px">
+        HealthBridge is invite only. You must be enrolled by your clinician before you can register.
+      </p>
+      <div style="width:100%;margin-bottom:16px">
+        <label class="lbl">Mobile phone number</label>
+        <input id="phone-display" class="field" type="text" placeholder="Enter phone number" readonly style="cursor:default;caret-color:transparent"/>
+      </div>
+      <button class="btn btn-primary" style="margin-bottom:14px" onclick="s1Continue()">CONTINUE</button>
+      <button class="link" onclick="s1Continue()">Use email instead</button>
+    </div>
+    <div class="kb">
+      <div class="kb-row">
+        <div class="key" onpointerdown="kp('1')"><span class="key-num">1</span></div>
+        <div class="key" onpointerdown="kp('2')"><span class="key-num">2</span><span class="key-sub">ABC</span></div>
+        <div class="key" onpointerdown="kp('3')"><span class="key-num">3</span><span class="key-sub">DEF</span></div>
+      </div>
+      <div class="kb-row">
+        <div class="key" onpointerdown="kp('4')"><span class="key-num">4</span><span class="key-sub">GHI</span></div>
+        <div class="key" onpointerdown="kp('5')"><span class="key-num">5</span><span class="key-sub">JKL</span></div>
+        <div class="key" onpointerdown="kp('6')"><span class="key-num">6</span><span class="key-sub">MNO</span></div>
+      </div>
+      <div class="kb-row">
+        <div class="key" onpointerdown="kp('7')"><span class="key-num">7</span><span class="key-sub">PQRS</span></div>
+        <div class="key" onpointerdown="kp('8')"><span class="key-num">8</span><span class="key-sub">TUV</span></div>
+        <div class="key" onpointerdown="kp('9')"><span class="key-num">9</span><span class="key-sub">WXYZ</span></div>
+      </div>
+      <div class="kb-row">
+        <div class="key key-spec" onpointerdown="kp('+*#')">+*#</div>
+        <div class="key" onpointerdown="kp('0')"><span class="key-num">0</span></div>
+        <div class="key key-del" onpointerdown="kDel()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: REGISTER -->
+  <div class="screen" id="s2">
+    <div class="status-bar"><span class="s-time" id="clock2">9:41</span></div>
+    <div class="scroll-area" style="padding:8px 24px 32px">
+      <div class="dots" style="margin-bottom:28px">
+        <div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+      </div>
+      <h1 style="font-family:'DM Serif Display',serif;font-size:36px;color:var(--text);margin-bottom:8px;line-height:1.15">A little about you</h1>
+      <p style="font-size:15px;color:var(--muted);margin-bottom:28px">This helps us keep your account safe</p>
+      <label class="lbl">Date of birth</label>
+      <input id="dob" class="field" type="date" style="margin-bottom:20px"/>
+      <div class="check-row" id="tos-row" onclick="toggleTos()" style="margin-bottom:28px">
+        <div class="check-box" id="tos-box">
+          <svg viewBox="0 0 14 10" fill="none"><polyline points="1,5 5,9 13,1" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <p style="font-size:14px;color:var(--text);line-height:1.6">I agree to the <span class="link" style="display:inline;font-size:14px">terms of use</span> and <span class="link" style="display:inline;font-size:14px">privacy policy</span></p>
+      </div>
+      <button class="btn btn-primary" onclick="s2Continue()">CONTINUE</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: OTP -->
+  <div class="screen" id="s3">
+    <div class="status-bar"><span class="s-time" id="clock3">9:41</span></div>
+    <div class="scroll-area" style="padding:16px 24px 32px;display:flex;flex-direction:column;align-items:center">
+      <div style="width:80px;height:80px;background:var(--blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:16px;flex-shrink:0">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="5" width="18" height="14" rx="2" stroke="#2196F3" stroke-width="1.8"/>
+          <path d="M3 7l9 6 9-6" stroke="#2196F3" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="17" cy="15" r="4" fill="#2196F3"/>
+          <path d="M15.5 15l1 1.2 2-2" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="dots" style="margin-bottom:20px">
+        <div class="dot"></div><div class="dot"></div><div class="dot on"></div>
+      </div>
+      <h1 style="font-family:'DM Serif Display',serif;font-size:34px;color:var(--text);text-align:center;margin-bottom:10px;line-height:1.2">Check your phone</h1>
+      <p id="otp-sub" style="font-size:14px;color:var(--muted);text-align:center;line-height:1.7;margin-bottom:28px">
+        We sent a text message to <strong style="color:var(--text)" id="otp-num"></strong> with a 6-digit number. Enter it below.
+      </p>
+      <div class="otp-wrap" id="otp-wrap">
+        <div class="otp-cell active" id="otp0"></div>
+        <div class="otp-cell" id="otp1"></div>
+        <div class="otp-cell" id="otp2"></div>
+        <div class="otp-cell" id="otp3"></div>
+        <div class="otp-cell" id="otp4"></div>
+        <div class="otp-cell" id="otp5"></div>
+      </div>
+      <div style="margin-top:24px;text-align:center">
+        <p style="font-size:14px;color:var(--muted);margin-bottom:6px">Didn't receive the code?</p>
+        <button class="link" onclick="resendOTP()">Resend code</button>
+      </div>
+      <div style="width:100%;margin-top:24px;background:#d1d5db;border-radius:16px;overflow:hidden">
+        <div class="kb-row"><div class="key" onpointerdown="otp_k('1')"><span class="key-num">1</span></div><div class="key" onpointerdown="otp_k('2')"><span class="key-num">2</span><span class="key-sub">ABC</span></div><div class="key" onpointerdown="otp_k('3')"><span class="key-num">3</span><span class="key-sub">DEF</span></div></div>
+        <div class="kb-row"><div class="key" onpointerdown="otp_k('4')"><span class="key-num">4</span><span class="key-sub">GHI</span></div><div class="key" onpointerdown="otp_k('5')"><span class="key-num">5</span><span class="key-sub">JKL</span></div><div class="key" onpointerdown="otp_k('6')"><span class="key-num">6</span><span class="key-sub">MNO</span></div></div>
+        <div class="kb-row"><div class="key" onpointerdown="otp_k('7')"><span class="key-num">7</span><span class="key-sub">PQRS</span></div><div class="key" onpointerdown="otp_k('8')"><span class="key-num">8</span><span class="key-sub">TUV</span></div><div class="key" onpointerdown="otp_k('9')"><span class="key-num">9</span><span class="key-sub">WXYZ</span></div></div>
+        <div class="kb-row"><div class="key key-spec" style="font-size:11px" onpointerdown="otp_fill()">AUTO</div><div class="key" onpointerdown="otp_k('0')"><span class="key-num">0</span></div><div class="key key-del" onpointerdown="otp_del()"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: CONSENT -->
+  <div class="screen" id="s4">
+    <div class="nav" style="position:sticky;top:0;z-index:10">
+      <span class="nav-title">Program name</span>
+    </div>
+    <div class="scroll-area" style="padding:20px 20px 100px">
+      <h1 style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--text);margin-bottom:8px;line-height:1.25">Welcome to Org Program</h1>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:22px;line-height:1.7">Intro content section. Intro content section.</p>
+      <div class="consent-card c-blue-card">
+        <h4>Your goals:</h4>
+        <ul><li>Take 3 readings a day</li><li>Keep all readings below 300 mg/dL</li></ul>
+      </div>
+      <div class="consent-card c-green-card">
+        <h4>Your notifications:</h4>
+        <ul>
+          <li>You will be notified by SMS if you take less than 5 readings a day</li>
+          <li>Your provider will be notified if any reading is above 250 mg/dL</li>
+        </ul>
+      </div>
+      <div class="info-row">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10" stroke="#1565C0" stroke-width="1.8"/><path d="M12 11v5M12 8v1" stroke="#1565C0" stroke-width="2" stroke-linecap="round"/></svg>
+        <p>You will be able to access your goals and notifications at any time from your dashboard</p>
+      </div>
+      <h2 style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px">This is a section title</h2>
+      <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px">Please consent to the terms to continue the program. This content can be super long and customizable. Read carefully before agreeing to participation in the health monitoring program.</p>
+      <h2 style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Data &amp; Privacy</h2>
+      <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px">Your data is encrypted end-to-end. HealthBridge will never share your data with third parties without explicit consent. You may withdraw at any time.</p>
+    </div>
+    <div style="position:sticky;bottom:0;background:#fff;padding:12px 20px 20px;border-top:.5px solid var(--border)">
+      <button class="btn btn-primary" onclick="goTo('s5')">I AGREE</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: DASHBOARD -->
+  <div class="screen" id="s5">
+    <div class="nav">
+      <span class="nav-title">Health monitoring</span>
+      <div style="position:relative;cursor:pointer" onclick="showModal('Notifications','You have no new notifications. Your provider was last notified 2 days ago.')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="var(--blue)"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        <div id="notif-badge" style="position:absolute;top:-2px;right:-2px;width:10px;height:10px;background:var(--red);border-radius:50%;border:2px solid #fff"></div>
+      </div>
+    </div>
+    <div class="scroll-area" style="padding:16px" id="dash-scroll">
+      <div class="todo-block" id="todo-block">
+        <div class="todo-hdr">
+          <span class="todo-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--red)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            To do
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--muted)"><path d="M7 14l5-5 5 5z"/></svg>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="connect-cuff" onclick="connectDevice()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+            CONNECT BP CUFF
+          </button>
+          <button class="x-btn" onclick="dismissTodo()">×</button>
+        </div>
+      </div>
+
+      <h3 class="section-title">My readings</h3>
+      <div id="readings-container">
+        <div class="readings-empty">
+          <p class="re-title">Nothing to see yet</p>
+          <p class="re-sub">Once you have readings you will see them here.</p>
+        </div>
+      </div>
+
+      <div style="border-top:.5px solid var(--border);padding-top:16px">
+        <h3 class="section-title">Goals</h3>
+        <div class="goal-item">
+          <div class="goal-icon-wrap">
+            <svg width="40" height="40" viewBox="0 0 40 40">
+              <rect x="4" y="26" width="6" height="10" rx="2" fill="#2196F3"/>
+              <rect x="13" y="18" width="6" height="18" rx="2" fill="#2196F3"/>
+              <rect x="22" y="10" width="6" height="26" rx="2" fill="#90CAF9"/>
+              <polyline points="7,22 16,14 25,18 36,6" stroke="#2196F3" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <p class="goal-text hi" style="flex:1">Keep all blood pressure readings below 135/87</p>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;cursor:pointer" onclick="showModal('Blood Pressure Goal','Your target is to keep systolic pressure below 135 mmHg and diastolic below 87 mmHg. This range was set by your care team to manage cardiovascular risk.')"><circle cx="12" cy="12" r="10" stroke="#2196F3" stroke-width="1.8"/><path d="M12 11v5M12 8v1" stroke="#2196F3" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="goal-item">
+          <div class="goal-icon-wrap">
+            <svg width="40" height="40" viewBox="0 0 40 40">
+              <rect x="5" y="8" width="30" height="26" rx="4" stroke="#555" stroke-width="2" fill="none"/>
+              <path d="M5 16h30" stroke="#555" stroke-width="2"/>
+              <path d="M14 5v6M26 5v6" stroke="#555" stroke-width="2.2" stroke-linecap="round"/>
+              <circle cx="14" cy="24" r="2.2" fill="#555"/><circle cx="20" cy="24" r="2.2" fill="#555"/><circle cx="26" cy="24" r="2.2" fill="#555"/>
+              <circle cx="14" cy="30" r="2.2" fill="#555"/><circle cx="20" cy="30" r="2.2" fill="#555"/>
+            </svg>
+          </div>
+          <p class="goal-text" style="flex:1">Take blood pressure readings at least 3 times per day</p>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;cursor:pointer" onclick="showModal('Daily Reading Goal','Taking readings consistently throughout the day — morning, afternoon, and evening — gives your care team the most accurate picture of your blood pressure patterns.')"><circle cx="12" cy="12" r="10" stroke="#2196F3" stroke-width="1.8"/><path d="M12 11v5M12 8v1" stroke="#2196F3" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div style="border-top:.5px solid var(--border);padding-top:16px;padding-bottom:8px">
+        <h3 class="section-title">Quick add reading</h3>
+        <div style="display:flex;gap:10px;margin-bottom:10px">
+          <input id="sys-input" class="field" type="number" placeholder="Systolic" style="flex:1;text-align:center"/>
+          <input id="dia-input" class="field" type="number" placeholder="Diastolic" style="flex:1;text-align:center"/>
+        </div>
+        <button class="btn btn-primary" onclick="addReading()">ADD READING</button>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab on" onclick="switchTab(0,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>DASHBOARD</button>
+      <button class="tab" onclick="switchTab(1,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>CONNECTIONS</button>
+      <button class="tab" onclick="switchTab(2,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.22-.07.47.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>ACCOUNT</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 6: CONNECTIONS -->
+  <div class="screen" id="s6">
+    <div class="nav"><span class="nav-title">Connections</span></div>
+    <div class="scroll-area" style="padding:20px">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Connect your health devices to automatically sync readings.</p>
+      <div class="device-card" onclick="toggleDevice(0)">
+        <div class="device-icon" id="dev-icon-0" style="background:var(--bg)">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--muted)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+        </div>
+        <div style="flex:1"><p class="device-name">BP Cuff Pro</p><p class="device-sub" id="dev-sub-0">Tap to connect</p></div>
+        <span class="badge badge-off" id="dev-badge-0">Disconnected</span>
+      </div>
+      <div class="device-card" onclick="toggleDevice(1)">
+        <div class="device-icon" id="dev-icon-1" style="background:var(--bg)">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--muted)"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm.75 14.25v-4.5h3l-4.5-7.5v4.5H8.25l4.5 7.5z"/></svg>
+        </div>
+        <div style="flex:1"><p class="device-name">Heart Rate Monitor</p><p class="device-sub" id="dev-sub-1">Tap to connect</p></div>
+        <span class="badge badge-off" id="dev-badge-1">Disconnected</span>
+      </div>
+      <div class="device-card" onclick="toggleDevice(2)">
+        <div class="device-icon" id="dev-icon-2" style="background:var(--bg)">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--muted)"><path d="M13.5 5.5c1.09 0 1.91-.82 1.91-1.91 0-1.09-.82-1.91-1.91-1.91S11.59 2.5 11.59 3.59s.82 1.91 1.91 1.91zM9.9 19.1L11 14l2 2v6h2v-7.5l-2.1-2 .6-3C14.8 11 16.8 12 19 12v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l2.1-.8L8.7 15 5.3 14l-.5 2 4.1 1.1z"/></svg>
+        </div>
+        <div style="flex:1"><p class="device-name">Fitness Tracker</p><p class="device-sub" id="dev-sub-2">Tap to connect</p></div>
+        <span class="badge badge-off" id="dev-badge-2">Disconnected</span>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab" onclick="switchTab(0,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>DASHBOARD</button>
+      <button class="tab on" onclick="switchTab(1,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>CONNECTIONS</button>
+      <button class="tab" onclick="switchTab(2,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.22-.07.47.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>ACCOUNT</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 7: ACCOUNT -->
+  <div class="screen" id="s7">
+    <div class="nav"><span class="nav-title">Account</span></div>
+    <div class="scroll-area" style="padding:24px 20px">
+      <div class="avatar">JD</div>
+      <p style="text-align:center;font-size:18px;font-weight:700;color:var(--text);margin-bottom:2px">Jane Doe</p>
+      <p style="text-align:center;font-size:14px;color:var(--muted);margin-bottom:28px">Patient ID: HB-29471</p>
+      <div style="background:#fff;border:.5px solid var(--border);border-radius:16px;padding:0 16px;margin-bottom:20px">
+        <div class="menu-row" onclick="showModal('Personal Information','Update your name, date of birth, and contact details.')">
+          <div class="menu-icon" style="background:#e3f2fd"><svg width="20" height="20" viewBox="0 0 24 24" fill="#1565C0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+          <span class="menu-label">Personal information</span><span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-row" onclick="showModal('My Program','Your current program: Hypertension Management. Enrolled on Jan 12, 2025. Provider: Dr. Sarah Chen.')">
+          <div class="menu-icon" style="background:#e8f5e9"><svg width="20" height="20" viewBox="0 0 24 24" fill="#2e7d32"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div>
+          <span class="menu-label">My program</span><span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-row" onclick="showModal('Notification Preferences','You are currently receiving SMS alerts for readings above 250 mg/dL and daily reminders at 8am, 1pm, and 8pm.')">
+          <div class="menu-icon" style="background:#fff3e0"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e65100"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></div>
+          <span class="menu-label">Notification preferences</span><span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-row" onclick="showModal('Privacy & Security','Your data is encrypted with AES-256. Two-factor authentication is enabled. Last login: Today at 9:41 AM.')">
+          <div class="menu-icon" style="background:#fce4ec"><svg width="20" height="20" viewBox="0 0 24 24" fill="#880e4f"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg></div>
+          <span class="menu-label">Privacy &amp; security</span><span class="menu-arrow">›</span>
+        </div>
+      </div>
+      <button class="btn btn-danger" onclick="logOut()">Sign out</button>
+    </div>
+    <div class="tab-bar">
+      <button class="tab" onclick="switchTab(0,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>DASHBOARD</button>
+      <button class="tab" onclick="switchTab(1,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>CONNECTIONS</button>
+      <button class="tab on" onclick="switchTab(2,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.22-.07.47.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>ACCOUNT</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let phoneNum='', otpDigits=[], tosChecked=false, readings=[], devConnected=[false,false,false];
+
+function updateClock(){
+  const n=new Date(),h=n.getHours()%12||12,m=String(n.getMinutes()).padStart(2,'0'),t=h+':'+m;
+  ['clock1','clock2','clock3'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t;});
+}
+updateClock();setInterval(updateClock,10000);
+
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2400);
+}
+
+function showModal(title,body){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').textContent=body;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+
+function fmtPhone(d){
+  if(d.length>=7)return'('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6,10);
+  if(d.length>=4)return'('+d.slice(0,3)+') '+d.slice(3);
+  return d;
+}
+function kp(v){
+  if(v==='+*#')return;
+  const d=(phoneNum+v).replace(/\D/g,'');
+  if(d.length>10)return;
+  phoneNum=d;
+  document.getElementById('phone-display').value=fmtPhone(d);
+}
+function kDel(){
+  phoneNum=phoneNum.slice(0,-1);
+  document.getElementById('phone-display').value=fmtPhone(phoneNum);
+}
+function s1Continue(){
+  if(phoneNum.length<10){toast('Please enter a valid phone number');return;}
+  document.getElementById('otp-num').textContent='('+phoneNum.slice(0,3)+') '+phoneNum.slice(3,6)+'-'+phoneNum.slice(6);
+  goTo('s2');
+}
+
+function toggleTos(){
+  tosChecked=!tosChecked;
+  const b=document.getElementById('tos-box');
+  tosChecked?b.classList.add('on'):b.classList.remove('on');
+}
+function s2Continue(){
+  const dob=document.getElementById('dob').value;
+  if(!dob){toast('Please enter your date of birth');return;}
+  if(!tosChecked){toast('Please agree to the terms');return;}
+  goTo('s3');otpDigits=[];renderOTP();
+}
+
+function renderOTP(){
+  for(let i=0;i<6;i++){
+    const c=document.getElementById('otp'+i);
+    c.textContent=otpDigits[i]||'';
+    c.className='otp-cell'+(otpDigits[i]?' filled':'')+(i===otpDigits.length?' active':'');
+  }
+  if(otpDigits.length===6){setTimeout(()=>goTo('s4'),400);}
+}
+function otp_k(v){if(otpDigits.length<6){otpDigits.push(v);renderOTP();}}
+function otp_del(){if(otpDigits.length>0){otpDigits.pop();renderOTP();}}
+function otp_fill(){otpDigits=['4','2','8','1','9','3'];renderOTP();}
+function resendOTP(){otpDigits=[];renderOTP();toast('Code resent!');}
+
+let todoDismissed=false;
+function dismissTodo(){
+  const el=document.getElementById('todo-block');
+  el.style.transition='all .3s';el.style.opacity='0';el.style.maxHeight='0';el.style.padding='0';el.style.margin='0';
+  setTimeout(()=>el.style.display='none',320);
+  todoDismissed=true;
+}
+function connectDevice(){
+  devConnected[0]=true;
+  updateDeviceUI(0);
+  dismissTodo();
+  readings.unshift({sys:118,dia:76,ts:new Date(),ok:true});
+  readings.unshift({sys:128,dia:82,ts:new Date(Date.now()-3600000),ok:true});
+  readings.unshift({sys:142,dia:91,ts:new Date(Date.now()-7200000),ok:false});
+  renderReadings();
+  toast('BP Cuff connected! Syncing readings…');
+  document.getElementById('notif-badge').style.display='none';
+}
+
+function addReading(){
+  const sys=parseInt(document.getElementById('sys-input').value);
+  const dia=parseInt(document.getElementById('dia-input').value);
+  if(isNaN(sys)||isNaN(dia)||sys<60||sys>250||dia<40||dia>150){toast('Please enter valid readings');return;}
+  const ok=sys<135&&dia<87;
+  readings.unshift({sys,dia,ts:new Date(),ok});
+  document.getElementById('sys-input').value='';
+  document.getElementById('dia-input').value='';
+  renderReadings();
+  toast(ok?'Reading added — within goal!':'Reading added — above target range');
+}
+
+function renderReadings(){
+  const c=document.getElementById('readings-container');
+  if(readings.length===0){
+    c.innerHTML='<div class="readings-empty"><p class="re-title">Nothing to see yet</p><p class="re-sub">Once you have readings you will see them here.</p></div>';
+    return;
+  }
+  c.innerHTML=readings.slice(0,5).map(r=>{
+    const h=r.ts.getHours()%12||12,m=String(r.ts.getMinutes()).padStart(2,'0'),ampm=r.ts.getHours()>=12?'PM':'AM';
+    return`<div class="reading-card">
+      <div style="display:flex;align-items:baseline;gap:4px">
+        <span class="reading-val">${r.sys}/${r.dia}</span>
+        <span class="reading-unit">mmHg</span>
+      </div>
+      <p class="reading-time">${h}:${m} ${ampm}</p>
+      <span class="reading-status ${r.ok?'reading-ok':'reading-warn'}">${r.ok?'Within goal':'Above target'}</span>
+    </div>`;
+  }).join('');
+}
+
+function updateDeviceUI(i){
+  const on=devConnected[i];
+  document.getElementById('dev-icon-'+i).style.background=on?'var(--green-light)':'var(--bg)';
+  document.getElementById('dev-icon-'+i).querySelector('svg').setAttribute('fill',on?'var(--green-dark)':'var(--muted)');
+  document.getElementById('dev-sub-'+i).textContent=on?'Connected & syncing':'Tap to connect';
+  const b=document.getElementById('dev-badge-'+i);
+  b.textContent=on?'Connected':'Disconnected';
+  b.className='badge '+(on?'badge-on':'badge-off');
+}
+function toggleDevice(i){
+  devConnected[i]=!devConnected[i];
+  updateDeviceUI(i);
+  toast(devConnected[i]?'Device connected!':'Device disconnected');
+}
+
+function switchTab(idx,el){
+  const screens=['s5','s6','s7'];
+  goTo(screens[idx]);
+}
+
+function logOut(){
+  phoneNum='';otpDigits=[];tosChecked=false;readings=[];
+  devConnected=[false,false,false];
+  document.getElementById('phone-display').value='';
+  document.getElementById('dob').value='';
+  document.getElementById('tos-box').classList.remove('on');
+  renderReadings();
+  for(let i=0;i<3;i++)updateDeviceUI(i);
+  const tb=document.getElementById('todo-block');
+  tb.style.display='';tb.style.opacity='1';tb.style.maxHeight='';tb.style.padding='';tb.style.margin='';
+  document.getElementById('notif-badge').style.display='block';
+  toast('Signed out');
+  setTimeout(()=>goTo('s1'),400);
+}
+</script>
+</body>
+</html>

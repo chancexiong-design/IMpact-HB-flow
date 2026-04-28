@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>HealthBridge — Account Exists Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --blue:#2196F3;--blue-light:#E3F2FD;--blue-dark:#1565C0;
+  --green:#34C759;--green-light:#e8f8ec;--green-dark:#2e7d32;
+  --red:#FF3B30;--orange:#FF9500;
+  --text:#1c1c1e;--muted:#6e6e73;--border:#e5e5ea;--bg:#f2f2f7;
+}
+html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;overflow:hidden}
+body{display:flex;justify-content:center;align-items:center}
+
+.phone{
+  width:390px;height:844px;background:#fff;border-radius:44px;
+  box-shadow:0 32px 80px rgba(0,0,0,0.22),0 0 0 1px rgba(0,0,0,0.08);
+  overflow:hidden;display:flex;flex-direction:column;position:relative;
+}
+@media(max-height:900px){
+  .phone{height:100vh;border-radius:0;width:100vw;max-width:430px}
+}
+
+.status-bar{
+  height:50px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;flex-shrink:0;
+}
+.s-time{font-size:15px;font-weight:600;color:var(--text)}
+.s-icons{display:flex;gap:5px;align-items:center}
+.s-icons svg{width:18px;height:18px}
+
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden;animation:fadeIn .22s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scroll-area::-webkit-scrollbar{display:none}
+
+.nav{
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;border-bottom:.5px solid var(--border);flex-shrink:0;background:#fff;
+}
+.nav-title{font-size:17px;font-weight:600;color:var(--text)}
+
+.btn{
+  display:flex;align-items:center;justify-content:center;
+  border-radius:30px;padding:16px;font-size:15px;font-weight:700;
+  font-family:'DM Sans',sans-serif;letter-spacing:.8px;border:none;
+  cursor:pointer;transition:all .18s;width:100%;
+}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:active{transform:scale(.97);opacity:.9}
+.btn-ghost{background:#d1d5db;color:#8a8a8e}
+.btn-danger{background:#fff;color:var(--red);border:1.5px solid var(--red)}
+
+.link{color:var(--blue);font-size:15px;font-weight:500;cursor:pointer;background:none;border:none;font-family:inherit;text-align:center;padding:4px}
+.link:active{opacity:.7}
+
+.field{
+  background:var(--bg);border:1.5px solid transparent;border-radius:12px;
+  padding:14px 16px;font-size:16px;font-family:'DM Sans',sans-serif;
+  width:100%;color:var(--text);transition:border-color .2s;outline:none;
+}
+.field:focus{border-color:var(--blue);background:#fff}
+label.lbl{font-size:13px;font-weight:500;color:var(--muted);display:block;margin-bottom:6px}
+
+/* keyboard */
+.kb{flex-shrink:0;background:#d1d5db}
+.kb-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.5px}
+.key{height:56px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:background .1s}
+.key:active{background:#c8cdd4}
+.key-num{font-size:22px;font-weight:400;color:var(--text);line-height:1}
+.key-sub{font-size:9px;letter-spacing:1.8px;color:var(--muted);margin-top:2px}
+.key-spec{background:#adb5bd;font-size:14px;color:var(--text)}
+.key-del{background:#adb5bd}
+
+/* OTP cells */
+.otp-wrap{display:flex;gap:10px;justify-content:center}
+.otp-cell{
+  width:50px;height:58px;border:1.5px solid #e0e0e0;border-radius:14px;
+  font-size:26px;font-weight:600;display:flex;align-items:center;justify-content:center;
+  background:#f7f7f7;transition:all .2s;color:var(--text);
+}
+.otp-cell.active{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(33,150,243,.15)}
+.otp-cell.filled{border-color:var(--blue);background:#fff}
+
+/* tab bar */
+.tab-bar{height:68px;display:flex;border-top:.5px solid var(--border);background:#fff;flex-shrink:0;padding-bottom:8px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.3px;transition:color .2s;border:none;background:none;font-family:inherit}
+.tab.on{color:var(--blue)}
+.tab svg{width:24px;height:24px}
+
+/* goal items */
+.goal-item{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;padding-bottom:14px;border-bottom:.5px solid var(--border)}
+.goal-item:last-child{border-bottom:none;margin-bottom:0}
+.goal-text{font-size:14px;color:var(--text);line-height:1.5;flex:1}
+.goal-text.hi{color:var(--blue);font-weight:600}
+
+/* toast */
+.toast{
+  position:absolute;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(0,0,0,.82);color:#fff;padding:10px 20px;border-radius:22px;
+  font-size:13px;font-weight:500;opacity:0;transition:all .3s;pointer-events:none;
+  white-space:nowrap;z-index:100;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* modal */
+.modal-bg{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:50;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-bg.open{opacity:1;pointer-events:all}
+.modal-sheet{background:#fff;border-radius:24px 24px 0 0;padding:24px 24px 36px;width:100%;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.modal-bg.open .modal-sheet{transform:none}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px}
+
+/* device cards */
+.device-card{background:#fff;border-radius:16px;border:.5px solid var(--border);padding:16px;display:flex;gap:14px;align-items:center;margin-bottom:12px;cursor:pointer;transition:background .15s}
+.device-card:active{background:var(--bg)}
+.badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;flex-shrink:0}
+.badge-on{background:var(--green-light);color:var(--green-dark)}
+.badge-off{background:var(--bg);color:var(--muted);border:.5px solid var(--border)}
+
+/* account */
+.avatar{width:80px;height:80px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--blue-dark);margin:0 auto 12px}
+.menu-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:.5px solid var(--border);cursor:pointer}
+.menu-row:last-child{border-bottom:none}
+.menu-row:active{opacity:.7}
+.menu-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="phone" id="app">
+
+  <div class="toast" id="toast"></div>
+
+  <!-- MODAL -->
+  <div class="modal-bg" id="modal" onclick="closeModal()">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <h3 id="modal-title" style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)"></h3>
+      <p id="modal-body" style="font-size:14px;color:var(--muted);line-height:1.7"></p>
+      <button class="btn btn-primary" style="margin-top:20px" onclick="closeModal()">Got it</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 1 · SINGLE ENTRY POINT
+  ══════════════════════════════════════ -->
+  <div class="screen active" id="s1">
+    <div class="status-bar">
+      <span class="s-time" id="clk1">9:41</span>
+      <div class="s-icons">
+        <svg viewBox="0 0 24 24" fill="var(--text)"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+        <svg viewBox="0 0 24 24" fill="var(--text)"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+      </div>
+    </div>
+
+    <div class="scroll-area" style="padding:28px 24px 0;display:flex;flex-direction:column;align-items:center">
+      <!-- Logo -->
+      <svg width="72" height="44" viewBox="0 0 72 44" fill="none" style="margin-bottom:8px">
+        <polyline points="2,22 14,22 18,8 25,36 32,10 39,30 44,22 58,22 63,8 68,22" stroke="#2196F3" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1 style="font-family:'DM Serif Display',serif;font-size:30px;color:var(--text);margin-bottom:16px;letter-spacing:-.3px">HealthBridge</h1>
+      <p style="font-size:14px;color:var(--muted);text-align:center;line-height:1.75;max-width:260px;margin-bottom:30px">
+        HealthBridge is invite only. You must be enrolled by your clinician before you can register.
+      </p>
+
+      <div style="width:100%;margin-bottom:16px">
+        <label class="lbl">Mobile phone number</label>
+        <input id="phone-display" class="field" type="text" placeholder="" readonly style="cursor:default;caret-color:transparent"/>
+      </div>
+
+      <button class="btn btn-primary" style="margin-bottom:14px" onclick="s1Continue()">CONTINUE</button>
+      <button class="link" onclick="s1Continue()">Use email instead</button>
+    </div>
+
+    <!-- Number keyboard -->
+    <div class="kb">
+      <div class="kb-row">
+        <div class="key" onpointerdown="kp('1')"><span class="key-num">1</span></div>
+        <div class="key" onpointerdown="kp('2')"><span class="key-num">2</span><span class="key-sub">ABC</span></div>
+        <div class="key" onpointerdown="kp('3')"><span class="key-num">3</span><span class="key-sub">DEF</span></div>
+      </div>
+      <div class="kb-row">
+        <div class="key" onpointerdown="kp('4')"><span class="key-num">4</span><span class="key-sub">GHI</span></div>
+        <div class="key" onpointerdown="kp('5')"><span class="key-num">5</span><span class="key-sub">JKL</span></div>
+        <div class="key" onpointerdown="kp('6')"><span class="key-num">6</span><span class="key-sub">MNO</span></div>
+      </div>
+      <div class="kb-row">
+        <div class="key" onpointerdown="kp('7')"><span class="key-num">7</span><span class="key-sub">PQRS</span></div>
+        <div class="key" onpointerdown="kp('8')"><span class="key-num">8</span><span class="key-sub">TUV</span></div>
+        <div class="key" onpointerdown="kp('9')"><span class="key-num">9</span><span class="key-sub">WXYZ</span></div>
+      </div>
+      <div class="kb-row">
+        <div class="key key-spec" onpointerdown="void 0">+*#</div>
+        <div class="key" onpointerdown="kp('0')"><span class="key-num">0</span></div>
+        <div class="key key-del" onpointerdown="kDel()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 2 · CHECK YOUR PHONE (OTP)
+  ══════════════════════════════════════ -->
+  <div class="screen" id="s2">
+    <div class="status-bar"><span class="s-time" id="clk2">9:41</span></div>
+
+    <div class="scroll-area" style="padding:28px 24px 0;display:flex;flex-direction:column;align-items:center">
+      <!-- Phone + message icon -->
+      <div style="width:90px;height:90px;background:var(--blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:28px;flex-shrink:0">
+        <svg width="50" height="50" viewBox="0 0 56 56" fill="none">
+          <!-- phone outline -->
+          <rect x="14" y="5" width="28" height="44" rx="5" stroke="#1565C0" stroke-width="2.4" fill="none"/>
+          <!-- message bubble -->
+          <rect x="20" y="26" width="20" height="14" rx="3" fill="#1565C0"/>
+          <path d="M24 31h8M24 35h5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+          <!-- notch -->
+          <rect x="22" y="9" width="12" height="3" rx="1.5" fill="#1565C0" opacity=".35"/>
+        </svg>
+      </div>
+
+      <h1 style="font-family:'DM Serif Display',serif;font-size:38px;color:var(--text);text-align:center;line-height:1.15;margin-bottom:14px">Check your<br>phone</h1>
+
+      <p style="font-size:14px;color:var(--muted);text-align:center;line-height:1.7;margin-bottom:4px">We sent a 6-digit code to</p>
+      <p id="otp-phone" style="font-size:15px;font-weight:700;color:var(--text);text-align:center;margin-bottom:26px">(123) 123-123</p>
+
+      <p style="font-size:14px;color:var(--text);font-weight:500;margin-bottom:14px;align-self:flex-start">Enter verification code</p>
+
+      <div class="otp-wrap" style="margin-bottom:28px;width:100%;padding:0 4px">
+        <div class="otp-cell active" id="c0"></div>
+        <div class="otp-cell" id="c1"></div>
+        <div class="otp-cell" id="c2"></div>
+        <div class="otp-cell" id="c3"></div>
+        <div class="otp-cell" id="c4"></div>
+        <div class="otp-cell" id="c5"></div>
+      </div>
+
+      <p style="font-size:14px;color:var(--muted);margin-bottom:6px">Didn't receive the code?</p>
+      <button class="link" onclick="resendCode()">Resend code</button>
+    </div>
+
+    <!-- VERIFY button + keyboard -->
+    <div style="flex-shrink:0">
+      <div style="padding:12px 24px 8px">
+        <button id="verify-btn" class="btn btn-ghost" onclick="doVerify()">VERIFY</button>
+      </div>
+      <div class="kb">
+        <div class="kb-row">
+          <div class="key" onpointerdown="ok('1')"><span class="key-num">1</span></div>
+          <div class="key" onpointerdown="ok('2')"><span class="key-num">2</span><span class="key-sub">ABC</span></div>
+          <div class="key" onpointerdown="ok('3')"><span class="key-num">3</span><span class="key-sub">DEF</span></div>
+        </div>
+        <div class="kb-row">
+          <div class="key" onpointerdown="ok('4')"><span class="key-num">4</span><span class="key-sub">GHI</span></div>
+          <div class="key" onpointerdown="ok('5')"><span class="key-num">5</span><span class="key-sub">JKL</span></div>
+          <div class="key" onpointerdown="ok('6')"><span class="key-num">6</span><span class="key-sub">MNO</span></div>
+        </div>
+        <div class="kb-row">
+          <div class="key" onpointerdown="ok('7')"><span class="key-num">7</span><span class="key-sub">PQRS</span></div>
+          <div class="key" onpointerdown="ok('8')"><span class="key-num">8</span><span class="key-sub">TUV</span></div>
+          <div class="key" onpointerdown="ok('9')"><span class="key-num">9</span><span class="key-sub">WXYZ</span></div>
+        </div>
+        <div class="kb-row">
+          <div class="key key-spec" style="font-size:11px;color:#333" onpointerdown="autoFill()">AUTO</div>
+          <div class="key" onpointerdown="ok('0')"><span class="key-num">0</span></div>
+          <div class="key key-del" onpointerdown="oDel()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 3 · DASHBOARD — WEIGHT
+  ══════════════════════════════════════ -->
+  <div class="screen" id="s3">
+    <div class="nav">
+      <span class="nav-title">Health monitoring</span>
+      <div style="position:relative;cursor:pointer" onclick="showModal('Notifications','No new alerts. Your last provider notification was 2 days ago.')">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="var(--blue)"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        <div id="notif-dot" style="position:absolute;top:-2px;right:-2px;width:10px;height:10px;background:var(--red);border-radius:50%;border:2px solid #fff"></div>
+      </div>
+    </div>
+
+    <div class="scroll-area" style="padding:16px 16px 8px">
+
+      <!-- Header row -->
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+        <h2 style="font-size:20px;font-weight:700;color:var(--text)">My readings</h2>
+        <span style="font-size:12px;color:var(--muted)">February 1 - February 8</span>
+      </div>
+
+      <!-- Weight label -->
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--muted)"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.33C18 2.99 16.5 1.5 14.67 1.5c-1.05 0-1.96.54-2.67 1.32C11.29 2.04 10.38 1.5 9.33 1.5 7.5 1.5 6 2.99 6 4.67c0 .45.11.89.18 1.33H4c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>
+        <span style="font-size:15px;font-weight:600;color:var(--text)">Weight</span>
+      </div>
+
+      <!-- Chart card -->
+      <div style="background:#fff;border:.5px solid var(--border);border-radius:14px;padding:14px 10px 10px;margin-bottom:12px;position:relative">
+        <!-- Y labels -->
+        <div style="position:absolute;right:8px;top:12px;display:flex;flex-direction:column;justify-content:space-between;height:108px;pointer-events:none">
+          <span style="font-size:10px;color:var(--muted)">220</span>
+          <span style="font-size:10px;color:var(--muted)">215</span>
+          <span style="font-size:10px;color:var(--muted)">210</span>
+          <span style="font-size:10px;color:var(--muted)">205</span>
+        </div>
+        <canvas id="wchart" width="320" height="108" style="width:100%;display:block"></canvas>
+        <!-- X labels -->
+        <div style="display:flex;justify-content:space-between;padding:4px 2px 0">
+          <span style="font-size:10px;color:var(--muted)">Thu</span>
+          <span style="font-size:10px;color:var(--muted)">Fri</span>
+          <span style="font-size:10px;color:var(--muted)">Sat</span>
+          <span style="font-size:10px;color:var(--muted)">Sun</span>
+          <span style="font-size:10px;color:var(--muted)">Mon</span>
+          <span style="font-size:10px;color:var(--muted)">Tue</span>
+          <span style="font-size:10px;color:var(--muted)">Wed</span>
+        </div>
+      </div>
+
+      <!-- Latest reading card -->
+      <div style="background:#fff;border:.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:4px">Latest weight</p>
+          <div style="display:flex;align-items:baseline;gap:5px">
+            <span id="latest-val" style="font-size:38px;font-weight:700;color:var(--text);line-height:1">175</span>
+            <span style="font-size:19px;font-weight:500;color:var(--text)">Lbs</span>
+          </div>
+          <p id="latest-ts" style="font-size:12px;color:var(--muted);margin-top:3px">04/12 - 05:35 PM</p>
+        </div>
+        <div style="cursor:pointer;padding:8px" onclick="showModal('Edit Reading','Opens the manual entry editor so you can correct this reading.')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--muted)"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        </div>
+      </div>
+
+      <!-- Show all link -->
+      <button class="btn" style="background:none;border:none;color:var(--blue);font-size:13px;font-weight:700;letter-spacing:.6px;padding:10px 0;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:4px" onclick="showModal('All Weight Readings','Wed 175 lbs · Tue 211 lbs · Mon 209 lbs · Sun 216 lbs · Sat 213 lbs · Fri 210 lbs · Thu 207 lbs')">
+        SHOW ALL WEIGHT
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--blue)"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </button>
+
+      <div style="border-top:.5px solid var(--border);margin:8px 0 16px"></div>
+
+      <!-- Log weight -->
+      <div style="margin-bottom:16px">
+        <p style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px">Log weight</p>
+        <div style="display:flex;gap:10px">
+          <input id="w-input" class="field" type="number" placeholder="e.g. 175 lbs" style="flex:1;text-align:center"/>
+          <button class="btn btn-primary" style="width:auto;padding:14px 22px;font-size:13px" onclick="logWeight()">ADD</button>
+        </div>
+      </div>
+
+      <div style="border-top:.5px solid var(--border);margin:0 0 16px"></div>
+
+      <!-- Goals -->
+      <div style="padding-bottom:12px">
+        <p style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:14px">Goals</p>
+
+        <div class="goal-item">
+          <div style="width:40px;height:40px;flex-shrink:0">
+            <svg width="40" height="40" viewBox="0 0 40 40">
+              <rect x="4" y="26" width="6" height="10" rx="2" fill="#2196F3"/>
+              <rect x="13" y="18" width="6" height="18" rx="2" fill="#2196F3"/>
+              <rect x="22" y="10" width="6" height="26" rx="2" fill="#90CAF9"/>
+              <polyline points="7,22 16,14 25,18 36,6" stroke="#2196F3" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <p class="goal-text hi">Keep all weight readings below 213 Lbs</p>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;cursor:pointer" onclick="showModal('Weight Goal','Your care team set a target of staying below 213 lbs to support your cardiovascular health plan.')">
+            <circle cx="12" cy="12" r="10" stroke="#2196F3" stroke-width="1.8"/>
+            <path d="M12 11v5M12 8v1" stroke="#2196F3" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <div class="goal-item">
+          <div style="width:40px;height:40px;flex-shrink:0">
+            <svg width="40" height="40" viewBox="0 0 40 40">
+              <rect x="5" y="8" width="30" height="26" rx="4" stroke="#555" stroke-width="2" fill="none"/>
+              <path d="M5 16h30" stroke="#555" stroke-width="2"/>
+              <path d="M14 5v6M26 5v6" stroke="#555" stroke-width="2.2" stroke-linecap="round"/>
+              <circle cx="14" cy="24" r="2.2" fill="#555"/><circle cx="20" cy="24" r="2.2" fill="#555"/><circle cx="26" cy="24" r="2.2" fill="#555"/>
+              <circle cx="14" cy="30" r="2.2" fill="#555"/><circle cx="20" cy="30" r="2.2" fill="#555"/>
+            </svg>
+          </div>
+          <p class="goal-text">Take weight readings at least 2 times per day</p>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;cursor:pointer" onclick="showModal('Daily Readings Goal','Weigh yourself in the morning before eating and again in the evening for the most consistent data.')">
+            <circle cx="12" cy="12" r="10" stroke="#2196F3" stroke-width="1.8"/>
+            <path d="M12 11v5M12 8v1" stroke="#2196F3" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab on" onclick="switchTab(0,this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        DASHBOARD
+      </button>
+      <button class="tab" onclick="switchTab(1,this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+        CONNECTIONS
+      </button>
+      <button class="tab" onclick="switchTab(2,this)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.22-.07.47.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        ACCOUNT
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 4 · CONNECTIONS
+  ══════════════════════════════════════ -->
+  <div class="screen" id="s4">
+    <div class="nav"><span class="nav-title">Connections</span></div>
+    <div class="scroll-area" style="padding:20px">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Connect your health devices to automatically sync readings.</p>
+
+      <div class="device-card" onclick="toggleDev(0)">
+        <div id="di0" style="width:48px;height:48px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--muted)"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.33C18 2.99 16.5 1.5 14.67 1.5c-1.05 0-1.96.54-2.67 1.32C11.29 2.04 10.38 1.5 9.33 1.5 7.5 1.5 6 2.99 6 4.67c0 .45.11.89.18 1.33H4c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>
+        </div>
+        <div style="flex:1"><p style="font-size:15px;font-weight:600;color:var(--text)">Smart Scale</p><p id="ds0" style="font-size:13px;color:var(--muted);margin-top:2px">Tap to connect</p></div>
+        <span class="badge badge-off" id="db0">Disconnected</span>
+      </div>
+
+      <div class="device-card" onclick="toggleDev(1)">
+        <div id="di1" style="width:48px;height:48px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--muted)"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm.75 14.25v-4.5h3l-4.5-7.5v4.5H8.25l4.5 7.5z"/></svg>
+        </div>
+        <div style="flex:1"><p style="font-size:15px;font-weight:600;color:var(--text)">Fitness Band</p><p id="ds1" style="font-size:13px;color:var(--muted);margin-top:2px">Tap to connect</p></div>
+        <span class="badge badge-off" id="db1">Disconnected</span>
+      </div>
+
+      <div class="device-card" onclick="toggleDev(2)">
+        <div id="di2" style="width:48px;height:48px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--muted)"><path d="M13.5 5.5c1.09 0 1.91-.82 1.91-1.91 0-1.09-.82-1.91-1.91-1.91S11.59 2.5 11.59 3.59s.82 1.91 1.91 1.91zM9.9 19.1L11 14l2 2v6h2v-7.5l-2.1-2 .6-3C14.8 11 16.8 12 19 12v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l2.1-.8L8.7 15 5.3 14l-.5 2 4.1 1.1z"/></svg>
+        </div>
+        <div style="flex:1"><p style="font-size:15px;font-weight:600;color:var(--text)">Heart Rate Monitor</p><p id="ds2" style="font-size:13px;color:var(--muted);margin-top:2px">Tap to connect</p></div>
+        <span class="badge badge-off" id="db2">Disconnected</span>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab" onclick="switchTab(0,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>DASHBOARD</button>
+      <button class="tab on" onclick="switchTab(1,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>CONNECTIONS</button>
+      <button class="tab" onclick="switchTab(2,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.22-.07.47.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>ACCOUNT</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 5 · ACCOUNT
+  ══════════════════════════════════════ -->
+  <div class="screen" id="s5">
+    <div class="nav"><span class="nav-title">Account</span></div>
+    <div class="scroll-area" style="padding:24px 20px">
+      <div class="avatar">JD</div>
+      <p style="text-align:center;font-size:18px;font-weight:700;color:var(--text);margin-bottom:2px">Jane Doe</p>
+      <p style="text-align:center;font-size:14px;color:var(--muted);margin-bottom:28px">Patient ID: HB-29471</p>
+      <div style="background:#fff;border:.5px solid var(--border);border-radius:16px;padding:0 16px;margin-bottom:20px">
+        <div class="menu-row" onclick="showModal('Personal Information','Update your name, date of birth, and contact details.')">
+          <div class="menu-icon" style="background:#e3f2fd"><svg width="20" height="20" viewBox="0 0 24 24" fill="#1565C0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+          <span style="font-size:15px;color:var(--text);flex:1">Personal information</span>
+          <span style="color:var(--muted);font-size:18px">›</span>
+        </div>
+        <div class="menu-row" onclick="showModal('My Program','Current program: Weight Management. Enrolled Feb 1, 2025. Provider: Dr. Sarah Chen.')">
+          <div class="menu-icon" style="background:#e8f5e9"><svg width="20" height="20" viewBox="0 0 24 24" fill="#2e7d32"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.33C18 2.99 16.5 1.5 14.67 1.5c-1.05 0-1.96.54-2.67 1.32C11.29 2.04 10.38 1.5 9.33 1.5 7.5 1.5 6 2.99 6 4.67c0 .45.11.89.18 1.33H4c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg></div>
+          <span style="font-size:15px;color:var(--text);flex:1">My program</span>
+          <span style="color:var(--muted);font-size:18px">›</span>
+        </div>
+        <div class="menu-row" onclick="showModal('Notifications','Receiving SMS alerts when weight exceeds 213 lbs. Daily reminders at 7am and 8pm.')">
+          <div class="menu-icon" style="background:#fff3e0"><svg width="20" height="20" viewBox="0 0 24 24" fill="#e65100"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></div>
+          <span style="font-size:15px;color:var(--text);flex:1">Notification preferences</span>
+          <span style="color:var(--muted);font-size:18px">›</span>
+        </div>
+        <div class="menu-row" onclick="showModal('Privacy & Security','AES-256 encryption. 2FA enabled. Last login: Today 9:41 AM.')">
+          <div class="menu-icon" style="background:#fce4ec"><svg width="20" height="20" viewBox="0 0 24 24" fill="#880e4f"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg></div>
+          <span style="font-size:15px;color:var(--text);flex:1">Privacy &amp; security</span>
+          <span style="color:var(--muted);font-size:18px">›</span>
+        </div>
+      </div>
+      <button class="btn btn-danger" onclick="signOut()">Sign out</button>
+    </div>
+    <div class="tab-bar">
+      <button class="tab" onclick="switchTab(0,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>DASHBOARD</button>
+      <button class="tab" onclick="switchTab(1,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>CONNECTIONS</button>
+      <button class="tab on" onclick="switchTab(2,this)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.22-.07.47.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>ACCOUNT</button>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script>
+// ── STATE ──
+let phoneNum = '';
+let otpDigits = [];
+let weightData = [207, 210, 213, 216, 209, 211, 175];
+const GOAL = 213;
+let devConn = [false, false, false];
+
+// ── CLOCK ──
+function tick() {
+  const n = new Date(), h = n.getHours() % 12 || 12, m = String(n.getMinutes()).padStart(2,'0');
+  ['clk1','clk2'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = h + ':' + m; });
+}
+tick(); setInterval(tick, 10000);
+
+// ── NAVIGATION ──
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 's3') setTimeout(drawChart, 60);
+}
+
+// ── TOAST ──
+let tt;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(tt); tt = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// ── MODAL ──
+function showModal(t, b) {
+  document.getElementById('modal-title').textContent = t;
+  document.getElementById('modal-body').textContent = b;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+// ── SCREEN 1: PHONE ENTRY ──
+function fmt(d) {
+  if (d.length >= 7) return '(' + d.slice(0,3) + ') ' + d.slice(3,6) + '-' + d.slice(6,10);
+  if (d.length >= 4) return '(' + d.slice(0,3) + ') ' + d.slice(3);
+  return d;
+}
+function kp(v) {
+  const d = (phoneNum + v).replace(/\D/g,'');
+  if (d.length > 10) return;
+  phoneNum = d;
+  document.getElementById('phone-display').value = fmt(d);
+}
+function kDel() {
+  phoneNum = phoneNum.slice(0,-1);
+  document.getElementById('phone-display').value = fmt(phoneNum);
+}
+function s1Continue() {
+  if (phoneNum.length < 10) { toast('Please enter a valid phone number'); return; }
+  document.getElementById('otp-phone').textContent = '(' + phoneNum.slice(0,3) + ') ' + phoneNum.slice(3,6) + '-' + phoneNum.slice(6);
+  otpDigits = []; renderOTP();
+  goTo('s2');
+}
+
+// ── SCREEN 2: OTP ──
+function renderOTP() {
+  for (let i = 0; i < 6; i++) {
+    const c = document.getElementById('c' + i);
+    c.textContent = otpDigits[i] || '';
+    c.className = 'otp-cell' + (otpDigits[i] ? ' filled' : '') + (i === otpDigits.length ? ' active' : '');
+  }
+  const btn = document.getElementById('verify-btn');
+  if (otpDigits.length === 6) {
+    btn.className = 'btn btn-primary';
+  } else {
+    btn.className = 'btn btn-ghost';
+  }
+}
+function ok(v) { if (otpDigits.length < 6) { otpDigits.push(v); renderOTP(); } }
+function oDel() { if (otpDigits.length > 0) { otpDigits.pop(); renderOTP(); } }
+function autoFill() { otpDigits = ['7','3','5','9','1','2']; renderOTP(); }
+function resendCode() { otpDigits = []; renderOTP(); toast('Code resent!'); }
+function doVerify() {
+  if (otpDigits.length < 6) { toast('Enter the 6-digit code first'); return; }
+  goTo('s3');
+}
+
+// ── WEIGHT CHART ──
+function drawChart() {
+  const canvas = document.getElementById('wchart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const pad = { l: 6, r: 32, t: 12, b: 4 };
+  const MIN = 200, MAX = 225;
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const n = weightData.length;
+  const xStep = cw / (n - 1);
+  const xOf = i => pad.l + i * xStep;
+  const yOf = v => pad.t + ch * (1 - (v - MIN) / (MAX - MIN));
+
+  // grid lines
+  [205, 210, 215, 220].forEach(v => {
+    ctx.beginPath(); ctx.moveTo(pad.l, yOf(v)); ctx.lineTo(W - pad.r, yOf(v));
+    ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 1;
+    ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
+  });
+
+  // goal dashed line
+  const gy = yOf(GOAL);
+  ctx.beginPath(); ctx.moveTo(pad.l, gy); ctx.lineTo(W - pad.r, gy);
+  ctx.strokeStyle = '#FF9500'; ctx.lineWidth = 1.6;
+  ctx.setLineDash([5, 4]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = '#FF9500'; ctx.font = 'bold 9px DM Sans,sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText(GOAL + '.0', W - 2, gy - 3);
+
+  // line
+  ctx.beginPath();
+  weightData.forEach((v, i) => { i === 0 ? ctx.moveTo(xOf(i), yOf(v)) : ctx.lineTo(xOf(i), yOf(v)); });
+  ctx.strokeStyle = '#2196F3'; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.stroke();
+
+  // dots
+  const peakIdx = weightData.indexOf(Math.max(...weightData));
+  weightData.forEach((v, i) => {
+    const x = xOf(i), y = yOf(v), peak = i === peakIdx;
+    ctx.beginPath(); ctx.arc(x, y, peak ? 6 : 4, 0, Math.PI * 2);
+    ctx.fillStyle = peak ? '#FF9500' : '#fff';
+    ctx.strokeStyle = '#2196F3'; ctx.lineWidth = 2;
+    ctx.fill(); ctx.stroke();
+    if (peak) {
+      ctx.fillStyle = '#FF9500'; ctx.font = 'bold 10px DM Sans,sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(v, x, y - 10);
+    }
+  });
+}
+
+// ── LOG WEIGHT ──
+function logWeight() {
+  const v = parseInt(document.getElementById('w-input').value);
+  if (isNaN(v) || v < 50 || v > 500) { toast('Enter a valid weight (50–500 lbs)'); return; }
+  weightData.push(v); if (weightData.length > 7) weightData.shift();
+  const now = new Date();
+  const mo = String(now.getMonth()+1).padStart(2,'0'), dy = String(now.getDate()).padStart(2,'0');
+  const h = now.getHours() % 12 || 12, mn = String(now.getMinutes()).padStart(2,'0'), ap = now.getHours() >= 12 ? 'PM' : 'AM';
+  document.getElementById('latest-val').textContent = v;
+  document.getElementById('latest-ts').textContent = mo + '/' + dy + ' - ' + h + ':' + mn + ' ' + ap;
+  document.getElementById('w-input').value = '';
+  drawChart();
+  toast(v < GOAL ? 'Logged — within goal!' : 'Logged — above target (' + GOAL + ' lbs)');
+}
+
+// ── CONNECTIONS ──
+function toggleDev(i) {
+  devConn[i] = !devConn[i];
+  const on = devConn[i];
+  document.getElementById('di' + i).style.background = on ? 'var(--green-light)' : 'var(--bg)';
+  document.getElementById('di' + i).querySelector('svg').setAttribute('fill', on ? 'var(--green-dark)' : 'var(--muted)');
+  document.getElementById('ds' + i).textContent = on ? 'Connected & syncing' : 'Tap to connect';
+  const b = document.getElementById('db' + i);
+  b.textContent = on ? 'Connected' : 'Disconnected';
+  b.className = 'badge ' + (on ? 'badge-on' : 'badge-off');
+  toast(on ? 'Device connected!' : 'Device disconnected');
+}
+
+// ── TABS ──
+function switchTab(idx) {
+  goTo(['s3','s4','s5'][idx]);
+}
+
+// ── SIGN OUT ──
+function signOut() {
+  phoneNum = ''; otpDigits = [];
+  weightData = [207, 210, 213, 216, 209, 211, 175];
+  devConn = [false, false, false];
+  document.getElementById('phone-display').value = '';
+  document.getElementById('latest-val').textContent = '175';
+  document.getElementById('latest-ts').textContent = '04/12 - 05:35 PM';
+  document.getElementById('w-input').value = '';
+  [0,1,2].forEach(i => {
+    document.getElementById('di'+i).style.background = 'var(--bg)';
+    document.getElementById('di'+i).querySelector('svg').setAttribute('fill','var(--muted)');
+    document.getElementById('ds'+i).textContent = 'Tap to connect';
+    document.getElementById('db'+i).textContent = 'Disconnected';
+    document.getElementById('db'+i).className = 'badge badge-off';
+  });
+  document.getElementById('notif-dot').style.display = 'block';
+  toast('Signed out');
+  setTimeout(() => goTo('s1'), 400);
+}
+</script>
+</body>
+</html>
