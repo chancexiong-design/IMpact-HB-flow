@@ -1,0 +1,15 @@
+# Code Owners
+#
+# These users will be automatically requested for review on PRs.
+# Update this with your GitHub handle when you create a repo from this template.
+#
+# Format: <pattern> <@owner1> <@owner2> ...
+#
+# Examples:
+#   * @jane                    # Jane owns everything
+#   * @platform-team           # Team owns everything
+#   /docs/ @docs-team          # Docs team owns /docs/
+#   *.go @go-experts           # Go experts review Go files
+
+# Default owner for everything in this repo
+* @owner-handle

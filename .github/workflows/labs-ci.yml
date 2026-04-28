@@ -1,0 +1,97 @@
+name: Labs CI
+
+# Minimal CI for labs repos
+# Validates basic structure without requiring external secrets
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  validate:
+    name: Validate Structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required files exist
+        run: |
+          echo "Checking required files..."
+
+          missing=0
+
+          # Required files
+          for file in README.md .gitignore; do
+            if [ -f "$file" ]; then
+              echo "✓ $file exists"
+            else
+              echo "✗ $file is missing"
+              missing=1
+            fi
+          done
+
+          if [ $missing -eq 1 ]; then
+            echo ""
+            echo "Some required files are missing."
+            exit 1
+          fi
+
+          echo ""
+          echo "All required files present."
+
+      - name: Check README has required sections
+        run: |
+          echo "Checking README sections..."
+
+          missing=0
+
+          # Required sections (case-insensitive)
+          for section in "Purpose" "Status" "How to Run" "Review"; do
+            if grep -qi "## *$section" README.md; then
+              echo "✓ Found section: $section"
+            else
+              echo "✗ Missing section: $section"
+              missing=1
+            fi
+          done
+
+          if [ $missing -eq 1 ]; then
+            echo ""
+            echo "README is missing required sections."
+            echo "See template-labs-base for the expected format."
+            exit 1
+          fi
+
+          echo ""
+          echo "README has all required sections."
+
+      - name: Check for common secret patterns
+        run: |
+          echo "Scanning for potential secrets..."
+
+          # Common patterns that might indicate secrets
+          # This is a basic check, not a replacement for proper secret scanning
+          patterns=(
+            "AKIA[0-9A-Z]{16}"
+            "password\s*=\s*['\"][^'\"]+['\"]"
+            "api[_-]?key\s*=\s*['\"][^'\"]+['\"]"
+          )
+
+          found=0
+          for pattern in "${patterns[@]}"; do
+            if grep -rEi "$pattern" --include="*.py" --include="*.js" --include="*.ts" --include="*.json" --include="*.yml" --include="*.yaml" . 2>/dev/null | grep -v node_modules | grep -v ".git"; then
+              found=1
+            fi
+          done
+
+          if [ $found -eq 1 ]; then
+            echo ""
+            echo "⚠ Potential secrets detected. Please review the above matches."
+            echo "If these are false positives, you can ignore this warning."
+          else
+            echo "✓ No obvious secret patterns found."
+          fi
